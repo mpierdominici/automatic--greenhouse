@@ -4,6 +4,11 @@
 #include<stdint.h>
 #include<stdbool.h>
 
+#define ADC_SIZE 1024
+#define ADC_REF 5
+
+#define SOIL_HUM_MAX_O 100
+#define SOIL_HUM_MIN_O 0
 
 class soilHumidity{
   public:
@@ -18,6 +23,10 @@ class soilHumidity{
   
   uint8_t memoryAdressGain;
   uint8_t memoryAdressOffset;
+  float calHighMes;
+  float calLowMes;
+  uint8_t calHighTeo;
+  uint8_t calLowTeo;
   float gain;
   float offset;
   uint8_t pin;

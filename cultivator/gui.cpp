@@ -1,7 +1,8 @@
 #include "gui.h"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include "mnpRtc.h"
+
+
 
 #define GUI_I2C_ADRESS 0x27
 #define GUI_SCREEN_H 4
@@ -12,7 +13,8 @@
 #define GUI_STRING_SERIAL_NUMBER "      CULT-100"
 
 LiquidCrystal_I2C lcd(GUI_I2C_ADRESS, GUI_SCREEN_W, GUI_SCREEN_H); //creo la estructura de la pantalla
-tmElements_t tempData;
+
+
 byte hoja[8] =  {
   B00000,
   B00100,
@@ -25,27 +27,14 @@ byte hoja[8] =  {
 };
 
 void GUI_init(void) {
-
-  //LiquidCrystal_I2C lcd(GUI_I2C_ADRESS, GUI_SCREEN_W, GUI_SCREEN_H); //creo la estructura de la pantalla
-  // Inicializar el LCD
   lcd.init();
-  //mnpRtc_setDateTime(27,12,2021,19,20,10);
-  //Encender la luz de fondo.
+  //mnpRtc_setDateTime(9,1,2022,12,03,10);
   lcd.backlight();
-  
   lcd.createChar (7, hoja);
-  
-  //delay(100);
-  // Escribimos el Mensaje en el LCD.
-  //lcd.setCursor(0, 0);
-  //lcd.print("Hola Mundo");
-  //lcd.setCursor(0, 2);
-  //lcd.print("Hola Mundo");
-  // lcd.write (byte (7));
-
 }
 
 void GUI_presentacion(void) {
+  lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print(GUI_STRING_DEVICE_NAME);
   delay(2000);
@@ -57,38 +46,76 @@ void GUI_presentacion(void) {
   lcd.setCursor(0,3);
   lcd.print(GUI_STRING_SERIAL_NUMBER);
   delay(2000);    
+}
+
+
+
+void gui_principal_reDrawAll(void){
   lcd.clear();
   lcd.setCursor(0, 2);
   lcd.write (byte (7));
-  lcd.print("050% ON");
+  lcd.print("000% OFF");
   
   lcd.setCursor(0, 3);
   lcd.write (byte (7));
-  lcd.print("050% OFF");
+  lcd.print("000% OFF");
   
   lcd.setCursor(10, 2);
   lcd.write (byte (7));
-  lcd.print("050% ON");
+  lcd.print("000% OFF");
   
   lcd.setCursor(10, 3);
   lcd.write (byte (7));
-  lcd.print("050% OFF");
-
+  lcd.print("000% OFF");
   
-  while(1){
-    
-     tempData=mnpRtc_getDateTime();
+}
+
+void gui_principal_printTime(tmElements_t dateTime){
+  //tempData=mnpRtc_getDateTime();
      lcd.setCursor(0,0);
      lcd.print(GUI_STRING_CLEAN_LINE);
      lcd.setCursor(0,0);
-     lcd.print(tempData.Hour);
+     lcd.print(dateTime.Hour);
      lcd.print(":");
-     lcd.print(tempData.Minute);
+     lcd.print(dateTime.Minute);
      lcd.print(":");
-     lcd.print(tempData.Second);
-     delay(1100);
-  }
-
+     lcd.print(dateTime.Second);
 }
 
- 
+void gui_principal_updateCh1(uint16_t medicion){
+    lcd.setCursor(1, 2);
+    lcd.print("   +");
+    lcd.setCursor(1, 2);
+    lcd.print(medicion);  
+}
+
+
+
+void gui_calibracion_soilHum_stage1(uint8_t ch){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Calibrando canal: ");
+  lcd.print(ch);
+  lcd.setCursor(0,2);
+  lcd.print("Inserte suelo seco");
+  lcd.setCursor(0,3);
+  lcd.print("pres Enter Continuar");
+}
+
+void gui_calibracion_soilHum_stage2(void){
+  lcd.clear();
+  lcd.setCursor(0,2);
+  lcd.print("Inserte suelo hum");
+  lcd.setCursor(0,3);
+  lcd.print("pres Enter Continuar");
+  
+}
+
+void gui_calibracion_soilHum_stage3(void){
+
+    lcd.clear();
+  lcd.setCursor(0,2);
+  lcd.print("cal Finalizada");
+
+  
+}
