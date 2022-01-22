@@ -20,7 +20,7 @@
 #define CH1_ANALOG_PIN A0
 
 
-#define TIME_OUT_RTC 20 //cada segundo chequiar el rtc
+#define TIME_OUT_RTC 20 //cada 2 segundo chequiar el rtc
 
 
 mnp_encoder menuControl(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON);//encoder
@@ -32,7 +32,7 @@ void setup() {
 
   GUI_init();
   //Serial.begin(9600);
-  //mnpRtc_setDateTime(15,1,2022,12,18,10);
+//  mnpRtc_setDateTime(16,1,2022,16,10,10);
 
 }
 uint8_t contadorIzq = 0;
