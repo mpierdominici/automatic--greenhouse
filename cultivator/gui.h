@@ -17,4 +17,6 @@ void gui_calibracion_soilHum_stage1(uint8_t ch);
 void gui_calibracion_soilHum_stage2(void);
 void gui_calibracion_soilHum_stage3(void);
 
+void gui_princial_updatePump1(bool state);
+
 #endif /*GUI*/

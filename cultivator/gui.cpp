@@ -84,9 +84,16 @@ void gui_principal_printTime(tmElements_t dateTime){
 
 void gui_principal_updateCh1(uint16_t medicion){
     lcd.setCursor(1, 2);
-    lcd.print("   +");
+    lcd.print("   ");
     lcd.setCursor(1, 2);
     lcd.print(medicion);  
+}
+
+void gui_princial_updatePump1(bool state){
+    lcd.setCursor(6, 2);
+    lcd.print("   ");
+    lcd.setCursor(6, 2);
+    lcd.print(state?"ON":"OFF"); 
 }
 
 
