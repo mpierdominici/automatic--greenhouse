@@ -1,49 +1,24 @@
 #include"soilHumControl.h"
+#include"mnpEeprom.h"
 
-//typedef enum{
-//  TH;//control tiempo humedad
-//  MANUAL;//manual, detien el funcionamiento de la bomba
-//
-//}soilHumControl_types_t;
-//
-//
-//class soilHumControl{
-//  public:
-//  soilHumControl(soilHumidity * sensHum,waterPump * pump,uint8_t mem2save);
-//  void udateDate(tmElements_t currentTime);
-//  soilHumControl_types_t getMode(void){return mode;};
-//  void setMode(soilHumControl_types_t nMode);
-//  void setTimeOut(uint32_t timeBetewenLowHum);
-//  void setMaxHum(uint8_t hum);//0-100%
-//  void setMinHum(uint8_t hum);//0-100%
-//  void updateWaterTankState(bool empty){waterTankIsEmpty=empty;};
-//  uint8_t getHumActual(void){return humActual};
-//  void run(void); //actualizo estado de bomba, lectura de sesnores
-//  private:
-//  bool waterTankIsEmpty;//estado del tanque, tru si esta bacio
-//  soilHumidity * humGraund;//lectura de humedad
-//  waterPump * water;//control de la bomba
-//  uint32_t actualDate;//date actual
-//  uint32_t nextEvent;//momento en que deve iniciarse el riego
-//  uint32_t timeInterval;//intervalo a esperar luego de que se seque el suelo
-//  soilHumControl_types_t mode;//modo acual del control
-//  uint8_t humMax;//nivel maximo de humedad
-//  uint8_t humMin;//nivel minimo de humedad
-//  uint8_t humActual;//ultima medicion de humedad
-//
-//
-//};
 
 soilHumControl::soilHumControl(soilHumidity * sensHum, waterPump * pump, uint8_t mem2save) {
   humGraund = sensHum;
   water = pump;
-  humMax = 80;
-  humMin = 20;
+  memPosHigh=mem2save;
+  //humMax = 80;
+  //humMin = 20;
   humActual = 0;
   mode = MANUAL;
-  timeInterval = 0;
+  //timeInterval = 0;
   actualDate = 0;
   nextEvent = 0;
+  waterTankIsEmpty=false;
+
+  timeInterval=mnpEeprom_read32(mem2save-SOILHUMCONTROL_DELTA_T_POS);
+  humMax=mnpEeprom_read8(mem2save-SOILHUMCONTROL_HUM_MAX_POS);
+  humMin=mnpEeprom_read8(mem2save-SOILHUMCONTROL_HUM_MIN_POS);
+
 }
 
 void soilHumControl::run(void) {
@@ -70,9 +45,14 @@ void soilHumControl::run(void) {
         }
       }
     }
-  }else{
+  }else{//reinicio flags
     startCount=false;
     regando=false;   
+  }
+  if(waterTankIsEmpty && regando){
+    water->turnOff();    
+  }else if((waterTankIsEmpty==false)&& regando && (water->isOn() ==false)){
+    water->turnOn();
   }
 }
 

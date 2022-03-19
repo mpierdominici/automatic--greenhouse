@@ -19,6 +19,8 @@ uint16_t mnpEeprom_read16(uint8_t posH) {
 }
 
 
+
+
 void mnpEeprom_write8(uint8_t data, uint8_t posH) {
   EEPROM[posH] = data;
 }
@@ -37,6 +39,22 @@ void mnpEeprom_writeFloat(float data, uint8_t posH) {
 float mnpEeprom_readFloat(uint8_t posH) {
   
   float value = 0.0;
+  posH = posH - sizeof(value);
+  uint8_t* p = (uint8_t*)(void*)&value;
+  for (int i = 0; i < sizeof(value); i++)
+    *p++ = EEPROM.read(posH++);
+  return value;
+}
+
+void mnpEeprom_write32(uint32_t data, uint8_t posH){
+  posH = posH - sizeof(data);
+  uint8_t* p = (uint8_t*)(void*)&data;
+  for (int i = 0; i < sizeof(data); i++)
+    EEPROM.write(posH++, *p++);
+}
+
+uint32_t mnpEeprom_read32( uint8_t posH){
+    uint32_t value = 0;
   posH = posH - sizeof(value);
   uint8_t* p = (uint8_t*)(void*)&value;
   for (int i = 0; i < sizeof(value); i++)
