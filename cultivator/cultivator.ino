@@ -23,9 +23,10 @@
 #define ENCODER_PIN_BUTTON 10
 
 #define LUZ_PIN 49
+#define VENTILACION_PIN 47
+#define RECIRCULADO_PIN 45
 
 #define CH1_ANALOG_PIN A0
-
 #define CH1_BOMBA_PIN 7
 
 /*FIN Listado de pines*/
@@ -75,24 +76,40 @@ waterPump bombaCh1(CH1_BOMBA_PIN);
 soilHumControl controlCh1(&senCh1, &bombaCh1, CH1_C_H);
 
 timmerChannel luzControl(LUZ_PIN,LUZ_MEM,true);
+timmerChannel ventilacionControl(VENTILACION_PIN,VENTILAZION_MEM,true);
+timmerChannel recirculadoControl(RECIRCULADO_PIN,RECIRCULADO_MEM,true);
 
 tmElements_t te;
 
 /***************Variables maquina de estados************************/
-uint8_t dispositivoSeleccionado=CANALES_RIEGO;
+uint8_t dispositivoSeleccionado=CANALES_RIEGO;//variable que indica que periferico esta seleccionado
 bool isSelectectingDevice=false; //si esta en true altero la fuente de eventos al precionar el encoder
-uint8_t canalSeleccionado = 0;
+uint8_t canalSeleccionado = 0;// variable que almacena que canal de riego esta seleccionado
 soilHumControl * controladores[4] = {&controlCh1, &controlCh1, &controlCh1, &controlCh1};
-uint8_t selectedHmin = 0;
-uint8_t selectedHmax = 0;
-uint32_t selectedDeltat = 0;
+uint8_t selectedHmin = 0;//variable donde almaceno la humeadad minima
+uint8_t selectedHmax = 0;//variable donde almaceno la humedad maxima
+uint32_t selectedDeltat = 0;//variable donde almaceno el tiempo que dejo seca la tierra
+
+uint8_t horaMenu=0;//variable que se utiliza para almacenar temporalmente la hora;
+
+bool refreshIdleScreen=false;//true refresco la informacion de la pantalla principal
+
 /***************FIN Variables maquina de estados************************/
 
 /*************Funciones de estado y transiciones******************/
 void enterIdle(void) {
   gui_principal_reDrawAll();
   }
-void duringIdle(void) {}
+void duringIdle(void) {
+  if(refreshIdleScreen){
+    refreshIdleScreen=false;
+    gui_principal_printTime(te);
+    gui_principal_updateCh1(senCh1.getHumidity());
+    gui_princial_updatePump1(bombaCh1.isOn());
+  }
+
+
+}
 void exitIdle(void) {}
 
 void enterSelec(void) {
@@ -193,11 +210,11 @@ void exitSelectPeriferico(void){
 }
 
 void enterLuzHoraOn(void){
-
+  gui_menu_luz_horaOn(horaMenu);
 }
 
 void enterLuzHoraOff(void){
-
+  gui_menu_luz_horaOff(horaMenu);
 }
 
 void enterRecirculadoHoraOn(void){
@@ -233,7 +250,33 @@ void t_selecPerifericoDec(void){
   gui_menu_selecPeriferico(dispositivoSeleccionado);
 }
 
+void t_selPeriferico2luzHoraOn(void){
+  horaMenu=luzControl.getHoraOn();
+}
 
+void t_luzHoraOn2horaOff(void){
+  horaMenu=luzControl.getHoraOff();
+}
+
+void t_luzHoraOnInc(void){
+  horaMenu++;
+  horaMenu=horaMenu>23?23:horaMenu;
+}
+
+void t_luzHoraOnDec(void){
+   horaMenu--;
+  horaMenu=horaMenu>23?0:horaMenu;//overflow uint8
+}
+
+void t_luzHoraOffInc(void){
+  horaMenu++;
+  horaMenu=horaMenu>23?23:horaMenu;
+}
+
+void t_luzHoraOffDec(void){
+  horaMenu--;
+  horaMenu=horaMenu>23?0:horaMenu;//overflow uint8
+}
   /*************FIN Funciones de estado y transiciones******************/
 
   /*********Ceacion de la maquina de estado y sus estados*********/
@@ -269,6 +312,18 @@ void t_selecPerifericoDec(void){
     fsm.add_transition(&s_selectPeriferico, &s_selectPeriferico, DECC, &t_selecPerifericoDec);
     fsm.add_transition(&s_selectPeriferico, &s_idle, EV_SALIR,NULL);
 
+    fsm.add_transition(&s_selectPeriferico,&s_luzHoraOn,IR_LUZ,&t_selPeriferico2luzHoraOn);
+    fsm.add_transition(&s_luzHoraOn,&s_luzHoraOn,INC,&t_luzHoraOnInc);
+    fsm.add_transition(&s_luzHoraOn,&s_luzHoraOn,DECC,&t_luzHoraOnDec);
+    fsm.add_transition(&s_luzHoraOn,&s_luzHoraOff,ENTER,&t_luzHoraOn2horaOff);
+    
+    
+    fsm.add_transition(&s_luzHoraOff,&s_luzHoraOff,INC,&t_luzHoraOffInc);
+    fsm.add_transition(&s_luzHoraOff,&s_luzHoraOff,DECC,&t_luzHoraOffDec);
+    fsm.add_transition(&s_luzHoraOff,&s_idle,ENTER,NULL);
+
+    
+    
     fsm.add_transition(&s_selectPeriferico, &s_selec, IR_RIEGO, &t_idle2selec);
     fsm.add_transition(&s_selec, &s_hmax, ENTER, t_selec2hmax);
     fsm.add_transition(&s_selec, &s_selec, INC, t_selecInc);
@@ -326,9 +381,17 @@ void t_selecPerifericoDec(void){
             controlCh1.setMinHum(5);
             controlCh1.setTimeOut(25);
             luzControl.setHoraOn(10);
-            luzControl.setHoraOff(30);
+            luzControl.setHoraOff(20);
             luzControl.setMode(true);
 
+            ventilacionControl.setHoraOn(20);
+            ventilacionControl.setHoraOff(30);
+            ventilacionControl.setMode(true);
+
+            recirculadoControl.setHoraOn(30);
+            recirculadoControl.setHoraOff(40);
+            recirculadoControl.setMode(true);
+              
             mnpRtc_setDateTime(16, 1, 2022, 16, 10, 10);
             Serial.println("Configuracion Finalizada");
             Serial.print("Demora de la configuracion: ");
@@ -340,13 +403,16 @@ void t_selecPerifericoDec(void){
 
 
       if (toRtc.timeOver()) {
+        refreshIdleScreen=true;//indico que la funcion durin de idle rediuje la pantalla principal
         te = mnpRtc_getDateTime();
         //gui_principal_printTime(te);
         controlCh1.udateDate(makeTime(te));
         controlCh1.run();
+
         luzControl.updateChannel(te.Second);
-        //gui_principal_updateCh1(senCh1.getHumidity());
-        //gui_princial_updatePump1(bombaCh1.isOn());
+        ventilacionControl.updateChannel(te.Second);
+        recirculadoControl.updateChannel(te.Second);
+       
         //gui_principal_updateCh1(analogRead(A0));
        // Serial.println(te.Second);
       }
@@ -365,6 +431,7 @@ void t_selecPerifericoDec(void){
         case MNP_ENCODER_TBUTTON:
           //fsm.trigger(ENTER);
           //fsm.run_machine();
+          delay(250);
           if(isSelectectingDevice){//si estoy seleccionando dispositivo altero la fuente de eventos enter para bifurcar la fsm
             fsm.trigger(IR_RIEGO+dispositivoSeleccionado);//ver sipositivos t y eventots t
             fsm.run_machine();
@@ -375,6 +442,7 @@ void t_selecPerifericoDec(void){
           break;
 
       }
+      fsm.run_machine();
     }
 
   }

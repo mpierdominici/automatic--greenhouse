@@ -7,4 +7,8 @@
 
 #define LUZ_MEM 19//variabes del controlador de luz
 
+#define VENTILAZION_MEM 23
+
+#define RECIRCULADO_MEM 27
+
 #endif /*EEPROM_MEM_MAP_H_*/
