@@ -15,7 +15,7 @@ class timmerChannel{
   setHoraActual(uint8_t hora){horaActual=hora;};//actualiza la hora actual
   setHoraOn(uint8_t hora){horaOn=hora;mnpEeprom_write8(horaOn,this->memAdress-TIMMER_CHANNEL_MEMPOS_ON);};//hora a partir de la cual se enciende el canal
   setHoraOff(uint8_t hora){horaOff=hora;mnpEeprom_write8(horaOff,this->memAdress-TIMMER_CHANNEL_MEMPOS_OFF);}; //hora a partir que se apaga el canal
-  setMode(bool isAuto){this->isAuto=isAuto;mnpEeprom_write8(this->isAuto,this->memAdress-TIMMER_CHANNEL_MEMPOS_AUTO);};//cambio de modo manual a automatico 
+  setMode(bool isAuto){this->isAuto=isAuto;mnpEeprom_write8(this->isAuto,this->memAdress-TIMMER_CHANNEL_MEMPOS_AUTO);this->turnOff();};//cambio de modo manual a automatico 
   bool getMode(void){return isAuto;};
   uint8_t getHoraOn(void){return horaOn;};
   uint8_t getHoraOff(void){return horaOff;};

@@ -24,6 +24,18 @@
 #define GUI_STRING_HORA_ON "Hora encendido:"
 #define GUI_STRING_HORA_OFF "Hora apagado:"
 
+#define GUI_EMERGENCIA_FLATA_AGUA_1 "Cargue Agua"
+#define GUI_EMERGENCIA_FLATA_AGUA_2 "Enter para continuar"
+
+#define GUI_PREND_APAG_PERIFERICO_TITULO "Modo"
+#define GUI_PREND_APAG_PERIFERICO_APAGADO "Apagado"
+#define GUI_PREND_APAG_PERIFERICO_AUTOMATICO "Automatico"
+
+#define GUI_STRING_SOBRETMERATURA1 "Error #001"
+#define GUI_STRING_SOBRETMERATURA2 "Sobretmeperatura de"
+#define GUI_STRING_SOBRETMERATURA3 "      luces"
+
+
 LiquidCrystal_I2C lcd(GUI_I2C_ADRESS, GUI_SCREEN_W, GUI_SCREEN_H); //creo la estructura de la pantalla
 
 
@@ -41,9 +53,19 @@ byte hoja[8] =  {
 void GUI_init(void) {
   lcd.init();
   //mnpRtc_setDateTime(9,1,2022,12,03,10);
-  lcd.backlight();
+  
   lcd.createChar (7, hoja);
 }
+
+
+void GUI_backlight(bool on){
+  if(on){
+    lcd.backlight();
+  }else{
+    lcd.noBacklight();
+  }
+}
+
 
 void GUI_presentacion(void) {
   lcd.clear();
@@ -87,6 +109,7 @@ void gui_principal_printTime(tmElements_t dateTime) {
   lcd.setCursor(0, 0);
   lcd.print(GUI_STRING_CLEAN_LINE);
   lcd.setCursor(0, 0);
+  lcd.print("     ");
   lcd.print(dateTime.Hour);
   lcd.print(":");
   lcd.print(dateTime.Minute);
@@ -108,6 +131,47 @@ void gui_princial_updatePump1(bool state) {
   lcd.print(state ? "ON" : "OFF");
 }
 
+void gui_principal_updateCh3(uint16_t medicion) {
+  lcd.setCursor(1, 3);
+  lcd.print("   ");
+  lcd.setCursor(1, 3);
+  lcd.print(medicion);
+}
+
+void gui_princial_updatePump3(bool state) {
+  lcd.setCursor(6, 3);
+  lcd.print("   ");
+  lcd.setCursor(6, 3);
+  lcd.print(state ? "ON" : "OFF");
+}
+
+void gui_principal_updateCh2(uint16_t medicion) {
+  lcd.setCursor(11, 2);
+  lcd.print("   ");
+  lcd.setCursor(11, 2);
+  lcd.print(medicion);
+}
+
+void gui_princial_updatePump2(bool state) {
+  lcd.setCursor(16, 2);
+  lcd.print("   ");
+  lcd.setCursor(16, 2);
+  lcd.print(state ? "ON" : "OFF");
+}
+
+void gui_principal_updateCh4(uint16_t medicion) {
+  lcd.setCursor(11, 3);
+  lcd.print("   ");
+  lcd.setCursor(11, 3);
+  lcd.print(medicion);
+}
+
+void gui_princial_updatePump4(bool state) {
+  lcd.setCursor(16, 3);
+  lcd.print("   ");
+  lcd.setCursor(16, 3);
+  lcd.print(state ? "ON" : "OFF");
+}
 
 
 void gui_calibracion_soilHum_stage1(uint8_t ch) {
@@ -211,4 +275,83 @@ void gui_menu_luz_horaOff(uint8_t hora){
   lcd.print(GUI_STRING_HORA_OFF);
   lcd.setCursor(0,3);
   lcd.print(hora);
+}
+
+void gui_menu_ventilacion_horaOn(uint8_t hora){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_STRING_SELECPERIFERICO_2);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_STRING_HORA_ON);
+  lcd.setCursor(0,3);
+  lcd.print(hora);
+}
+
+void gui_menu_ventilacion_horaOff(uint8_t hora){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_STRING_SELECPERIFERICO_2);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_STRING_HORA_OFF);
+  lcd.setCursor(0,3);
+  lcd.print(hora);
+}
+
+
+void gui_menu_recirculado_horaOn(uint8_t hora){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_STRING_SELECPERIFERICO_3);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_STRING_HORA_ON);
+  lcd.setCursor(0,3);
+  lcd.print(hora);
+}
+
+void gui_menu_recirculado_horaOff(uint8_t hora){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_STRING_SELECPERIFERICO_3);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_STRING_HORA_OFF);
+  lcd.setCursor(0,3);
+  lcd.print(hora);
+}
+
+void gui_emergencia_flataAgua1(void){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_EMERGENCIA_FLATA_AGUA_1);
+  //lcd.setCursor(0,1);
+  //lcd.print(GUI_STRING_HORA_OFF);
+
+}
+
+
+
+void gui_emergencia_flataAgua2(void){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_EMERGENCIA_FLATA_AGUA_1);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_EMERGENCIA_FLATA_AGUA_2);
+
+}
+
+void gui_predenrApagarPeriferico(bool estado){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_PREND_APAG_PERIFERICO_TITULO);
+  lcd.setCursor(0,2);
+  lcd.print(estado?GUI_PREND_APAG_PERIFERICO_AUTOMATICO:GUI_PREND_APAG_PERIFERICO_APAGADO);
+}
+
+void gui_sobretemperaturaLuz(void){
+    lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(GUI_STRING_SOBRETMERATURA1);
+  lcd.setCursor(0,1);
+  lcd.print(GUI_STRING_SOBRETMERATURA2);
+  lcd.setCursor(0,2);
+  lcd.print(GUI_STRING_SOBRETMERATURA3);
 }

@@ -57,3 +57,16 @@ void myTimer::showInfo()
   //Serial.println(millis());
   //Serial.println(seconds/1000);
 }
+
+bool myTimer::timeOverSinReset(void)
+{
+  if ((millis()) > startTime)
+  {
+    
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}

@@ -11,7 +11,7 @@ class myTimer
     bool timeOver(void);
     void setNewTime(unsigned long seconds_);
     void showInfo();
-
+    bool timeOverSinReset(void);
     unsigned long seconds;
     unsigned long startTime;
     void resetTimer(void);

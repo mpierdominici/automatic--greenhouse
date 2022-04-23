@@ -21,7 +21,7 @@ waterPump::turnOn(void){
 
 waterPump::turnOff(void){
   pumpState=false;
-  analogWrite(pin,pwmDuty);
+  analogWrite(pin,0);
 }
 
 bool waterPump::isOn(void){

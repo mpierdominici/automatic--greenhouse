@@ -12,6 +12,7 @@ typedef enum{
   MANUAL//manual, detien el funcionamiento de la bomba
 }soilHumControl_types_t;
 
+#define SOILHUMCONTROL_MODE_MAX_POS 7
 #define SOILHUMCONTROL_HUM_MAX_POS 6
 #define SOILHUMCONTROL_HUM_MIN_POS 5
 #define SOILHUMCONTROL_DELTA_T_POS 0
@@ -25,7 +26,7 @@ class soilHumControl{
   void setTimeOut(uint32_t timeBetewenLowHum){timeInterval=timeBetewenLowHum;mnpEeprom_write32(timeInterval,memPosHigh-SOILHUMCONTROL_DELTA_T_POS);};
   void setMaxHum(uint8_t hum){humMax=hum;mnpEeprom_write8(humMax,memPosHigh-SOILHUMCONTROL_HUM_MAX_POS);};//0-100%
   void setMinHum(uint8_t hum){humMin=hum;mnpEeprom_write8(humMin,memPosHigh-SOILHUMCONTROL_HUM_MIN_POS);};//0-100%
-  void updateWaterTankState(bool empty){waterTankIsEmpty=empty;};
+  void updateWaterTankState(bool empty){waterTankIsEmpty=empty;this->run();};
   uint8_t getHumActual(void){return humActual;};
   void run(void); //actualizo estado de bomba, lectura de sesnores
 
@@ -33,9 +34,11 @@ class soilHumControl{
   uint8_t getHmin(void){return humMin;};
   uint32_t getDeltat(void){return timeInterval;};
   
- 
+  bool isAuto(void){return mode==TH;};//true si el controlador esta en estado automatico
 
   private:
+  bool startCount; //true para indiciar que esta en la etapa de espera
+  bool regando; //true para indicar que me encuentro en la etapa de rigeo
 
   uint8_t humMax;//nivel maximo de humedad
   uint8_t humMin;//nivel minimo de humedad
