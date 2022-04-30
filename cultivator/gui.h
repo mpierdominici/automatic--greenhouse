@@ -53,4 +53,8 @@ void gui_predenrApagarPeriferico(bool estado);
 
 void gui_sobretemperaturaLuz(void);
 
+void gui_luz_state(bool isAuto, bool isOn);
+void gui_vent_state(bool isAuto, bool isOn);
+void gui_res_state(bool isAuto, bool isOn);
+
 #endif /*GUI*/

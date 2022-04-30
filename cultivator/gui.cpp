@@ -50,11 +50,47 @@ byte hoja[8] =  {
   B00100
 };
 
+byte on_simb[] = {
+  0x00,
+  0x00,
+  0x01,
+  0x02,
+  0x14,
+  0x08,
+  0x00,
+  0x00
+};
+
+byte off_simb[] = {
+  0x00,
+  0x00,
+  0x11,
+  0x0A,
+  0x04,
+  0x0A,
+  0x11,
+  0x00
+};
+
+byte dis_simb[] = {
+  0x1F,
+  0x1F,
+  0x0E,
+  0x15,
+  0x1B,
+  0x15,
+  0x0E,
+  0x1F
+};
+
 void GUI_init(void) {
   lcd.init();
   //mnpRtc_setDateTime(9,1,2022,12,03,10);
   
   lcd.createChar (7, hoja);
+  lcd.createChar (8, on_simb);
+  lcd.createChar (9, off_simb);
+  lcd.createChar (10, dis_simb);
 }
 
 
@@ -82,10 +118,54 @@ void GUI_presentacion(void) {
   delay(2000);
 }
 
+void gui_luz_state(bool isAuto, bool isOn){
+  lcd.setCursor(5, 1);
+  if(isAuto){
+    if(isOn){
+      lcd.write (byte (8));
 
+    }else{
+      lcd.write (byte (9));
+    }
+  }else{
+    lcd.write (byte (10));
+  }
+}
+
+void gui_vent_state(bool isAuto, bool isOn){
+  lcd.setCursor(12, 1);
+  if(isAuto){
+    if(isOn){
+      lcd.write (byte (8));
+
+    }else{
+      lcd.write (byte (9));
+    }
+  }else{
+    lcd.write (byte (10));
+  }
+}
+
+void gui_res_state(bool isAuto, bool isOn){
+  lcd.setCursor(18, 1);
+  if(isAuto){
+    if(isOn){
+      lcd.write (byte (8));
+
+    }else{
+      lcd.write (byte (9));
+    }
+  }else{
+    lcd.write (byte (10));
+  }
+}
 
 void gui_principal_reDrawAll(void) {
   lcd.clear();
+
+  lcd.setCursor(0, 1);
+  lcd.print(" |LUZ  |VENT  |RES  ");
+
   lcd.setCursor(0, 2);
   lcd.write (byte (7));
   lcd.print("000% OFF");
@@ -355,3 +435,4 @@ void gui_sobretemperaturaLuz(void){
   lcd.setCursor(0,2);
   lcd.print(GUI_STRING_SOBRETMERATURA3);
 }
+

@@ -22,9 +22,9 @@
 #define ENCODER_PIN_B 11
 #define ENCODER_PIN_BUTTON 10
 
-#define LUZ_PIN 49
-#define VENTILACION_PIN 47
-#define RECIRCULADO_PIN 45
+#define LUZ_PIN 47 //49
+#define VENTILACION_PIN 49  //47
+#define RECIRCULADO_PIN 41  //45
 
 #define CH1_ANALOG_PIN A0
 #define CH1_BOMBA_PIN 7
@@ -154,6 +154,10 @@ void duringIdle(void) {
 
     gui_principal_updateCh4(senCh4.getHumidity());
     gui_princial_updatePump4(bombaCh4.isOn());
+
+    gui_luz_state(luzControl.getMode(), luzControl.getOutputSatatus());
+    gui_vent_state(ventilacionControl.getMode(), ventilacionControl.getOutputSatatus());
+    gui_res_state(recirculadoControl.getMode(), recirculadoControl.getOutputSatatus());
   }
 
 
@@ -684,6 +688,7 @@ void t_ventilacionHoraOff2idle(void){
 
       }
       fsm.run_machine();
+      checkLigthTemperature();
     }
 
   }
@@ -737,9 +742,9 @@ void updateAlllPerifericals(void){
         controlCh4.udateDate(makeTime(te));
         controlCh4.run();
 
-        luzControl.updateChannel(te.Second);
-        ventilacionControl.updateChannel(te.Second);
-        recirculadoControl.updateChannel(te.Second);
+        luzControl.updateChannel(te.Hour);
+        ventilacionControl.updateChannel(te.Hour);
+        recirculadoControl.updateChannel(te.Hour);
        
         //gui_principal_updateCh1(analogRead(A0));
        // Serial.println(te.Second);
@@ -751,10 +756,21 @@ void updateAlllPerifericals(void){
       }
 }
 
+bool doubleCheckLigthTemperature(void){
+  uint32_t accumulator=0;
+  uint8_t i=0;
+  for(i=0;i<100;i++){
+    accumulator+=analogRead(LIGHT_TEMPERATURE_SENSOR_PIN);
+    delay(5);
+  }
 
+  accumulator=accumulator/i;
+  return (accumulator>=MAX_LIGHT_TEMPERATURE_SAMPLES);
+
+}
 
 void checkLigthTemperature(void){//chequeo que la temperatura de las luces sea inferior 
-  if(analogRead(LIGHT_TEMPERATURE_SENSOR_PIN)>=MAX_LIGHT_TEMPERATURE_SAMPLES){
+  if((analogRead(LIGHT_TEMPERATURE_SENSOR_PIN)>=MAX_LIGHT_TEMPERATURE_SAMPLES)&&doubleCheckLigthTemperature()){
     //inidicar en pantalla que se esta en una situacion de emergencia
     gui_sobretemperaturaLuz();
     //apagar todo los perifericos

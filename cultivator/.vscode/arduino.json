@@ -2,6 +2,6 @@
     "configuration": "cpu=atmega2560",
     "board": "arduino:avr:mega",
     "programmer": "arduino:arduinoisp",
-    "port": "COM7",
+    "port": "COM8",
     "sketch": "cultivator.ino"
 }
