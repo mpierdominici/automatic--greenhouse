@@ -133,6 +133,8 @@ bool slectedPerIsAuto=false;// true si el periferico seleccionado esta en modo a
 
 bool refreshIdleScreen=false;//true refresco la informacion de la pantalla principal
 
+uint8_t charUartReaded;//volor leido del uart
+
 /***************FIN Variables maquina de estados************************/
 
 /*************Funciones de estado y transiciones******************/
@@ -574,7 +576,26 @@ void t_ventilacionHoraOff2idle(void){
   
   }
   /*********FIN Asignacion de transiciones a eventos*********************/
-
+void parseAndSetTime(void){
+  uint8_t data[7];
+  uint8_t i=0;
+  
+  for( i=0;(i<7);i){
+    if(Serial.available()){
+      data[i]=Serial.read() - '0';
+      i++;
+      Serial.println("Llego dato");
+    }
+    
+  }
+ mnpRtc_setDateTime(10,10,2020,(data[0]*10)+data[1],(data[2]*10)+data[3],(data[4]*10)+data[5]);
+  Serial.println(i);
+  Serial.println((data[0]*10)+data[1]);
+  Serial.println((data[2]*10)+data[3]);
+  Serial.println((data[4]*10)+data[5]);
+  Serial.println("Time seteado");
+  
+}
 
   void setup() {
     assignTransitionFsm();
@@ -613,7 +634,8 @@ void t_ventilacionHoraOff2idle(void){
     while (1) {
 
       if(Serial.available()){
-        if(Serial.read()=='s'){//si me llego una S por terminal cargo los parametros a eeprom
+        charUartReaded=Serial.read();
+        if(charUartReaded=='s'){//si me llego una S por terminal cargo los parametros a eeprom
             uint32_t deltaTT=millis();
             Serial.println("Iniciando configuracion de EEPROM");
             controlCh1.setMaxHum(81);
@@ -651,6 +673,9 @@ void t_ventilacionHoraOff2idle(void){
             Serial.print(millis()-deltaTT);
             Serial.println(" mS");
             Serial.println(luzControl.getMode());
+        }else if(charUartReaded=='t'){
+          // llamo a funcion que parsea la fecha con formato hhmmss
+           parseAndSetTime();
         }
       }
 
@@ -756,16 +781,17 @@ void updateAlllPerifericals(void){
       }
 }
 
-bool doubleCheckLigthTemperature(void){
-  uint32_t accumulator=0;
-  uint8_t i=0;
-  for(i=0;i<100;i++){
-    accumulator+=analogRead(LIGHT_TEMPERATURE_SENSOR_PIN);
-    delay(5);
-  }
+bool doubleCheckLigthTemperature(void){//prom filter
+  static uint16_t lastSample=0;
+  uint16_t newSample=0;
+  uint16_t result=0;
 
-  accumulator=accumulator/i;
-  return (accumulator>=MAX_LIGHT_TEMPERATURE_SAMPLES);
+  delay(3);
+  newSample=analogRead(LIGHT_TEMPERATURE_SENSOR_PIN);
+  result=(newSample+lastSample)/2.0;
+
+  lastSample=newSample;
+  return (result>MAX_LIGHT_TEMPERATURE_SAMPLES);
 
 }
 
