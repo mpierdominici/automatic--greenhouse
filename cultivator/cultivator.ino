@@ -46,10 +46,13 @@
 #define TIME_OUT_RTC 20 //cada 2 segundo chequiar el rtc
 #define TIME_OUT_LUZ_PANTALLA 600 //un minuto sin actividad apaga la pantalla
 
+#define TEMPERATURE_FILTER_SIZE 40
 
 #define LM35_TEMPRATURE_2_SAMPLES 2.048 // 1 grado celcius son 2.048 muestras
 #define MAX_LIGHT_TEMPERATURE 70 //temperatura a la que se apaga el sistema por proteccion contra sobre temperatura
 #define MAX_LIGHT_TEMPERATURE_SAMPLES (MAX_LIGHT_TEMPERATURE*LM35_TEMPRATURE_2_SAMPLES)
+
+#define HOUR2SEC(X) ((X)*3600)//macro para convertir hora a segundo
 
 /*****************Prototipo de funciones en main ***********************/
 void checkWaterLevel(void);
@@ -407,7 +410,7 @@ void t_ventilacionHoraOff2idle(void){
     controladores[canalSeleccionado - 1]->setMinHum(selectedHmin);
   }
   void t_deltat2idle(void){
-    controladores[canalSeleccionado - 1]->setTimeOut(selectedDeltat);
+    controladores[canalSeleccionado - 1]->setTimeOut(HOUR2SEC(selectedDeltat));
   }
 
   void enter_riego_enable(void){
@@ -730,19 +733,28 @@ void parseAndSetTime(void){
   //Serial.println(controlCh1.timeInterval);
 
 
+bool filterWaterLevelSignal(void){
+  uint16_t emptynesCounter=0;
+  for(uint8_t i=0;i<10;i++){
+    if(!digitalRead(WATER_LEVEL_PIN)){emptynesCounter++;}
+    delay(15);
+  }
+  return emptynesCounter>5;
+}
+
 void checkWaterLevel(void){//miro si me quedo sin agua bloqueo el codigo y espero a que llenen de agua y confirmen para continuar
-  if(!digitalRead(WATER_LEVEL_PIN)){//si detecto que el nivel del tanque es bajo ingreso a la rutina de proteccion de bombas
+  if(!digitalRead(WATER_LEVEL_PIN) && filterWaterLevelSignal()){ //si detecto que el nivel del tanque es bajo ingreso a la rutina de proteccion de bombas
   //informo en pantalla
   gui_emergencia_flataAgua1();
   //desactivar bombas
   for(uint8_t i=0;i<4;i++){
     controladores[i]->updateWaterTankState(true);
   }
-  while(!digitalRead(WATER_LEVEL_PIN)){delay(100);updateAlllPerifericals();}//hasta que no llene el tanque bloque el sistema
+  while(!digitalRead(WATER_LEVEL_PIN)){delay(100);updateAlllPerifericals();timeOutScreen.resetTimer();}//hasta que no llene el tanque bloque el sistema
 
   gui_emergencia_flataAgua2();
 
-  while(!(menuControl.mnp_encoderRun()==MNP_ENCODER_TBUTTON)){delay(100);updateAlllPerifericals();}
+  while(!(menuControl.mnp_encoderRun()==MNP_ENCODER_TBUTTON)){delay(100);updateAlllPerifericals();timeOutScreen.resetTimer();}
   //reactivoRiego
   for(uint8_t i=0;i<4;i++){
     controladores[i]->updateWaterTankState(false);
@@ -782,15 +794,28 @@ void updateAlllPerifericals(void){
 }
 
 bool doubleCheckLigthTemperature(void){//prom filter
-  static uint16_t lastSample=0;
-  uint16_t newSample=0;
   uint16_t result=0;
+  static uint16_t sampleBuff[TEMPERATURE_FILTER_SIZE];
+  static bool once=false;
+  static uint16_t counter=0;
 
-  delay(3);
-  newSample=analogRead(LIGHT_TEMPERATURE_SENSOR_PIN);
-  result=(newSample+lastSample)/2.0;
+  if(!once){//inicializo el arreglo en cero
+    for(uint8_t i=0;i<TEMPERATURE_FILTER_SIZE;i++){
+      sampleBuff[i]=0;
+    }
+  }
 
-  lastSample=newSample;
+  sampleBuff[counter]=analogRead(LIGHT_TEMPERATURE_SENSOR_PIN)/TEMPERATURE_FILTER_SIZE;
+  counter++;
+
+  if(!(counter<TEMPERATURE_FILTER_SIZE)){
+    counter=0;
+  }
+
+  for(uint8_t i=0;i<TEMPERATURE_FILTER_SIZE;i++){
+    result=result+sampleBuff[i];
+  }
+    
   return (result>MAX_LIGHT_TEMPERATURE_SAMPLES);
 
 }

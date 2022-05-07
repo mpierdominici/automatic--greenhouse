@@ -46,7 +46,7 @@ timmerChannel::timmerChannel(uint8_t pin,uint8_t memAdress,bool inverted) {
 timmerChannel::updateChannel(uint8_t _horaActual){
   horaActual=_horaActual;
   if(isAuto){
-    if(horaActual>=horaOn && horaActual<=horaOff){
+    if(horaActual>=horaOn && horaActual<horaOff){
       turnOn();
     }else{
       turnOff();
